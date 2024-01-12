@@ -1,6 +1,6 @@
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.expressions.Window.partitionBy
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, lag}
 import org.apache.spark.sql.{SparkSession, functions}
 
 object Sold extends App {
@@ -27,7 +27,14 @@ object Sold extends App {
           //.rowsBetween(Window.unboundedPreceding, Window.currentRow)
         )
     )
+    .withColumn("diff",
+      col("running_total") -
+        lag("running_total", 1, 0)
+          .over(partitionBy("department")
+            .orderBy(col("time"))))
+    .orderBy("time")
 
+  data.printSchema()
   data.show()
 
 }
